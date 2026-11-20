@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Loans.Core\Loans.Core.csproj" />
+    <ProjectReference Include="..\Loans.Mcp\Loans.Mcp.csproj" />
+  </ItemGroup>
+
+</Project>

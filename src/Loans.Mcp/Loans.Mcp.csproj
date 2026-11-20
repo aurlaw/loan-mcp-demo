@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Loans.Core\Loans.Core.csproj" />
+  </ItemGroup>
+
+</Project>
