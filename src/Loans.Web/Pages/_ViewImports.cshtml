@@ -1,3 +1,7 @@
-﻿@using Loans.Web
+@* global:: needed because Pages/Loans creates namespace Loans.Web.Pages.Loans, which shadows the root "Loans" namespace. *@
+@using global::Loans.Web
+@using global::Loans.Web.Infrastructure
+@using global::Loans.Core.Data.Queries
+@using global::Loans.Core.Domain
 @namespace Loans.Web.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers

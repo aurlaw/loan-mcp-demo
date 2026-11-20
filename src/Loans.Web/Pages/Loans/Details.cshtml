@@ -1,0 +1,123 @@
+@page "/Loans/{id:int}"
+@model DetailsModel
+@{
+    var l = Model.Loan;
+    ViewData["Title"] = l.LoanNumber;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-page="/Loans/Index">Loans</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@l.LoanNumber</li>
+    </ol>
+</nav>
+
+<div class="d-flex align-items-center gap-3 mb-3">
+    <h1 class="h3 mb-0">@l.LoanNumber</h1>
+    <partial name="_StatusBadge" model="l.Status" />
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">Summary</div>
+            <div class="card-body">
+                <dl class="row summary mb-0">
+                    <dt class="col-sm-5">Borrower</dt><dd class="col-sm-7">@l.Borrower.LegalName</dd>
+                    <dt class="col-sm-5">Product</dt><dd class="col-sm-7">@Formatting.Humanize(l.Product)</dd>
+                    <dt class="col-sm-5">Original principal</dt><dd class="col-sm-7">@Formatting.Money(l.OriginalPrincipalCents)</dd>
+                    <dt class="col-sm-5">Rate</dt><dd class="col-sm-7">@Formatting.Rate(l.RateBps) fixed</dd>
+                    <dt class="col-sm-5">Term / amortization</dt><dd class="col-sm-7">@Formatting.Months(l.TermMonths) / @Formatting.Months(l.AmortizationMonths)</dd>
+                    <dt class="col-sm-5">Originated</dt><dd class="col-sm-7">@Formatting.Date(l.OriginationDate)</dd>
+                    <dt class="col-sm-5">Maturity</dt><dd class="col-sm-7">@Formatting.Date(l.MaturityDate)</dd>
+                    <dt class="col-sm-5">Current balance</dt><dd class="col-sm-7 fw-semibold" data-testid="current-balance">@Formatting.Money(l.CurrentBalanceCents)</dd>
+                    <dt class="col-sm-5">Paid through</dt><dd class="col-sm-7">@Formatting.Date(l.PaidThroughDate)</dd>
+                    <dt class="col-sm-5">Monthly payment</dt><dd class="col-sm-7">@Formatting.Money(Model.Schedule.MonthlyPaymentCents)</dd>
+                    @if (Model.Schedule.BalloonCents > 0)
+                    {
+                        <dt class="col-sm-5">Balloon at maturity</dt><dd class="col-sm-7">@Formatting.Money(Model.Schedule.BalloonCents)</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">Payoff quote</div>
+            <div class="card-body">
+                <form method="get" class="d-flex gap-2 mb-3">
+                    <label for="payoffDate" class="visually-hidden">Payoff date</label>
+                    <input type="date" id="payoffDate" name="payoffDate" class="form-control" value="@Model.PayoffDate?.ToString("yyyy-MM-dd")" />
+                    <button type="submit" class="btn btn-primary">Quote</button>
+                </form>
+                @if (Model.QuoteError is not null)
+                {
+                    <div class="alert alert-warning mb-0" role="alert" data-testid="quote-error">@Model.QuoteError</div>
+                }
+                else if (Model.Quote is { } q)
+                {
+                    <dl class="row summary mb-0" data-testid="payoff-quote">
+                        <dt class="col-7">Principal balance</dt><dd class="col-5 text-end">@Formatting.Money(q.PrincipalBalanceCents)</dd>
+                        <dt class="col-7">Accrued interest (@q.Days days)</dt><dd class="col-5 text-end">@Formatting.Money(q.AccruedInterestCents)</dd>
+                        <dt class="col-7">Per diem</dt><dd class="col-5 text-end">@Formatting.Money(q.PerDiemCents)</dd>
+                        <dt class="col-7 border-top pt-2">Total payoff</dt><dd class="col-5 text-end border-top pt-2 fw-semibold" data-testid="payoff-total">@Formatting.Money(q.TotalPayoffCents)</dd>
+                    </dl>
+                    <p class="small text-body-secondary mt-2 mb-0">
+                        Good through @Formatting.Date(q.PayoffDate). Interest accrues Actual/360 from @Formatting.Date(q.PaidThroughDate).
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="h5 mt-4">Payment history</h2>
+@if (l.Payments.Count == 0)
+{
+    <p class="text-body-secondary">No payments yet.</p>
+}
+else
+{
+    <table class="table table-sm align-middle">
+        <thead><tr><th>Due</th><th>Paid</th><th class="num">Amount</th><th class="num">Principal</th><th class="num">Interest</th><th>Status</th></tr></thead>
+        <tbody>
+        @foreach (var p in l.Payments)
+        {
+            <tr>
+                <td>@Formatting.Date(p.DueDate)</td>
+                <td>@Formatting.Date(p.PaidDate)</td>
+                <td class="num">@Formatting.Money(p.AmountCents)</td>
+                <td class="num">@Formatting.Money(p.PrincipalCents)</td>
+                <td class="num">@Formatting.Money(p.InterestCents)</td>
+                <td><partial name="_StatusBadge" model="p.Status" /></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+<details class="mt-4">
+    <summary class="h5">Amortization schedule (@Model.Schedule.Rows.Count payments)</summary>
+    <table class="table table-sm align-middle mt-2" data-testid="schedule">
+        <thead><tr><th>#</th><th>Due</th><th class="num">Payment</th><th class="num">Interest</th><th class="num">Principal</th><th class="num">Remaining</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var r in Model.Schedule.Rows)
+        {
+            <tr class="@(r.IsBalloon ? "schedule-balloon" : r.IsPaid ? "schedule-paid" : "")">
+                <td>@r.Number</td>
+                <td>@Formatting.Date(r.DueDate)</td>
+                <td class="num">@Formatting.Money(r.PaymentCents)</td>
+                <td class="num">@Formatting.Money(r.InterestCents)</td>
+                <td class="num">@Formatting.Money(r.PrincipalCents)</td>
+                <td class="num">@Formatting.Money(r.RemainingBalanceCents)</td>
+                <td>
+                    @if (r.IsBalloon) { <span class="badge text-bg-warning">Balloon</span> }
+                    else if (r.IsPaid) { <span class="badge text-bg-light">Paid</span> }
+                </td>
+            </tr>
+        }
+        </tbody>
+        <tfoot><tr><td colspan="3" class="fw-semibold">Total interest over term</td><td class="num fw-semibold">@Formatting.Money(Model.Schedule.TotalInterestCents)</td><td colspan="3"></td></tr></tfoot>
+    </table>
+</details>

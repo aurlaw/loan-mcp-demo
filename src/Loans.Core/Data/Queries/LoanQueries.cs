@@ -1,3 +1,5 @@
+using Loans.Core.Common;
+using Loans.Core.Domain;
 using Loans.Core.Engine;
 using Microsoft.EntityFrameworkCore;
 
@@ -70,12 +72,7 @@ internal sealed class LoanQueries(LoansDbContext db) : ILoanQueries
 
     public async Task<LoanDetail?> GetDetailAsync(int loanId, int? borrowerScope, CancellationToken cancellationToken = default)
     {
-        var loan = await db.Loans
-            .AsNoTracking()
-            .Include(l => l.Payments)
-            .Where(l => l.Id == loanId && (borrowerScope == null || l.BorrowerId == borrowerScope))
-            .FirstOrDefaultAsync(cancellationToken);
-
+        var loan = await LoadLoanAsync(loanId, borrowerScope, cancellationToken);
         if (loan is null)
         {
             return null;
@@ -105,4 +102,62 @@ internal sealed class LoanQueries(LoansDbContext db) : ILoanQueries
             BalanceCalculator.PaidThroughDate(loan),
             payments);
     }
+
+    public async Task<LoanSchedule?> GetScheduleAsync(int loanId, int? borrowerScope, CancellationToken cancellationToken = default)
+    {
+        var loan = await LoadLoanAsync(loanId, borrowerScope, cancellationToken);
+        if (loan is null)
+        {
+            return null;
+        }
+
+        // Loan.Create guarantees valid terms, so the schedule cannot fail.
+        var schedule = AmortizationCalculator
+            .Build(loan.OriginalPrincipalCents, loan.RateBps, loan.TermMonths, loan.AmortizationMonths, loan.OriginationDate.AddMonths(1))
+            .Value;
+
+        var paidDueDates = loan.Payments.Where(p => p.PaidDate is not null).Select(p => p.DueDate).ToHashSet();
+        var lastNumber = schedule.Rows.Count;
+
+        var rows = schedule.Rows
+            .Select(r => new ScheduleRowDto(
+                r.Number,
+                r.DueDate,
+                r.PaymentCents,
+                r.InterestCents,
+                r.PrincipalCents,
+                r.RemainingBalanceCents,
+                paidDueDates.Contains(r.DueDate),
+                schedule.BalloonCents > 0 && r.Number == lastNumber))
+            .ToList();
+
+        return new LoanSchedule(loan.Id, loan.LoanNumber, schedule.MonthlyPaymentCents, schedule.BalloonCents, schedule.TotalInterestCents, rows);
+    }
+
+    public async Task<Result<PayoffQuoteDto>> GetPayoffQuoteAsync(int loanId, DateOnly payoffDate, int? borrowerScope, CancellationToken cancellationToken = default)
+    {
+        var loan = await LoadLoanAsync(loanId, borrowerScope, cancellationToken);
+        if (loan is null)
+        {
+            return Result<PayoffQuoteDto>.Failure(new Error(QueryErrors.LoanNotFound, "Loan not found."));
+        }
+
+        return PayoffCalculator.Quote(loan, payoffDate).Map(q => new PayoffQuoteDto(
+            loan.Id,
+            loan.LoanNumber,
+            q.PrincipalBalanceCents,
+            q.AccruedInterestCents,
+            q.PerDiemCents,
+            q.Days,
+            q.TotalPayoffCents,
+            q.PayoffDate,
+            q.PaidThroughDate));
+    }
+
+    private Task<Loan?> LoadLoanAsync(int loanId, int? borrowerScope, CancellationToken cancellationToken) =>
+        db.Loans
+            .AsNoTracking()
+            .Include(l => l.Payments)
+            .Where(l => l.Id == loanId && (borrowerScope == null || l.BorrowerId == borrowerScope))
+            .FirstOrDefaultAsync(cancellationToken);
 }

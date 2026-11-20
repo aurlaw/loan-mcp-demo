@@ -1,0 +1,128 @@
+@page "/Applications/{id:int}"
+@model DetailsModel
+@{
+    var a = Model.Application;
+    ViewData["Title"] = $"Application — {a.Borrower.LegalName}";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-page="/Applications/Index">Applications</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@a.Borrower.LegalName</li>
+    </ol>
+</nav>
+
+<div class="d-flex align-items-center gap-3 mb-1">
+    <h1 class="h3 mb-0">@a.Borrower.LegalName</h1>
+    <partial name="_StatusBadge" model="a.Status" />
+</div>
+<p class="text-body-secondary">@a.Purpose</p>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">Request</div>
+            <div class="card-body">
+                <dl class="row summary mb-0">
+                    <dt class="col-sm-5">Product</dt><dd class="col-sm-7">@Formatting.Humanize(a.Product)</dd>
+                    <dt class="col-sm-5">Amount</dt><dd class="col-sm-7">@Formatting.Money(a.RequestedAmountCents)</dd>
+                    <dt class="col-sm-5">Rate</dt><dd class="col-sm-7">@Formatting.Rate(a.RequestedRateBps)</dd>
+                    <dt class="col-sm-5">Term / amortization</dt><dd class="col-sm-7">@Formatting.Months(a.TermMonths) / @Formatting.Months(a.AmortizationMonths)</dd>
+                    <dt class="col-sm-5">Submitted</dt><dd class="col-sm-7">@Formatting.Date(a.SubmittedOn)</dd>
+                    <dt class="col-sm-5">Loan officer</dt><dd class="col-sm-7">@(a.AssignedOfficerName ?? "—")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">Borrower</div>
+            <div class="card-body">
+                <dl class="row summary mb-0">
+                    <dt class="col-sm-5">Entity type</dt><dd class="col-sm-7">@Formatting.Humanize(a.Borrower.EntityType)</dd>
+                    <dt class="col-sm-5">Industry</dt><dd class="col-sm-7">@a.Borrower.Industry</dd>
+                    <dt class="col-sm-5">Years in business</dt><dd class="col-sm-7">@a.Borrower.YearsInBusiness</dd>
+                    <dt class="col-sm-5">State</dt><dd class="col-sm-7">@a.Borrower.State</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">Financials (annual)</div>
+            <div class="card-body">
+                <dl class="row summary mb-0">
+                    <dt class="col-sm-6">Revenue</dt><dd class="col-sm-6">@Formatting.Money(a.Financials.AnnualRevenueCents)</dd>
+                    <dt class="col-sm-6">Net operating income</dt><dd class="col-sm-6">@Formatting.Money(a.Financials.NetOperatingIncomeCents)</dd>
+                    <dt class="col-sm-6">Existing debt service</dt><dd class="col-sm-6">@Formatting.Money(a.Financials.ExistingAnnualDebtServiceCents)</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">Collateral</div>
+            <div class="card-body">
+                <dl class="row summary mb-0">
+                    <dt class="col-sm-6">Type</dt><dd class="col-sm-6">@Formatting.Humanize(a.Collateral.Type)</dd>
+                    <dt class="col-sm-6">Appraised value</dt><dd class="col-sm-6">@Formatting.Money(a.Collateral.AppraisedValueCents)</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-6">
+        <div class="card h-100" data-testid="underwriting">
+            <div class="card-header">Latest underwriting</div>
+            <div class="card-body">
+                @if (a.UnderwritingResult is { } u)
+                {
+                    <dl class="row summary">
+                        <dt class="col-sm-6">Recommendation</dt><dd class="col-sm-6"><partial name="_StatusBadge" model="u.Recommendation" /></dd>
+                        <dt class="col-sm-6">DSCR</dt><dd class="col-sm-6">@Formatting.Dscr(u.DscrX100)</dd>
+                        <dt class="col-sm-6">LTV</dt><dd class="col-sm-6">@Formatting.Ltv(u.LtvBps)</dd>
+                        <dt class="col-sm-6">Risk rating</dt><dd class="col-sm-6">@u.RiskRating of 8</dd>
+                        <dt class="col-sm-6">Proposed monthly payment</dt><dd class="col-sm-6">@Formatting.Money(u.ProposedMonthlyPaymentCents)</dd>
+                        <dt class="col-sm-6">Policy exceptions</dt>
+                        <dd class="col-sm-6">
+                            @if (u.Exceptions.Count == 0) { <span>None</span> }
+                            else
+                            {
+                                <ul class="list-unstyled mb-0">
+                                    @foreach (var e in u.Exceptions) { <li>@Formatting.Humanize(e)</li> }
+                                </ul>
+                            }
+                        </dd>
+                    </dl>
+                    <p class="small text-body-secondary mb-0">Run by @(u.RunByName ?? u.RunByUserId) on @Formatting.DateTime(u.RunAt)</p>
+                }
+                else
+                {
+                    <p class="text-body-secondary mb-0">Not yet underwritten.</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100" data-testid="decision">
+            <div class="card-header">Decision</div>
+            <div class="card-body">
+                @if (a.Decision is { } d)
+                {
+                    <dl class="row summary">
+                        <dt class="col-sm-5">Outcome</dt><dd class="col-sm-7"><partial name="_StatusBadge" model="d.Outcome" /></dd>
+                        <dt class="col-sm-5">Approved rate</dt><dd class="col-sm-7">@Formatting.Rate(d.ApprovedRateBps)</dd>
+                        <dt class="col-sm-5">Conditions</dt><dd class="col-sm-7">@(d.Conditions ?? "—")</dd>
+                    </dl>
+                    <p class="small text-body-secondary mb-0">Decided by @(d.DecidedByName ?? d.DecidedByUserId) on @Formatting.DateTime(d.DecidedAt)</p>
+                }
+                else
+                {
+                    <p class="text-body-secondary mb-0">No decision.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

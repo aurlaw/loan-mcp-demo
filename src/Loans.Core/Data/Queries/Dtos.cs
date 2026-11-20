@@ -52,6 +52,45 @@ public sealed record LoanDetail(
     DateOnly PaidThroughDate,
     IReadOnlyList<PaymentDto> Payments);
 
+public sealed record ScheduleRowDto(
+    int Number,
+    DateOnly DueDate,
+    long PaymentCents,
+    long InterestCents,
+    long PrincipalCents,
+    long RemainingBalanceCents,
+    bool IsPaid,
+    bool IsBalloon);
+
+public sealed record LoanSchedule(
+    int LoanId,
+    string LoanNumber,
+    long MonthlyPaymentCents,
+    long BalloonCents,
+    long TotalInterestCents,
+    IReadOnlyList<ScheduleRowDto> Rows);
+
+public sealed record PayoffQuoteDto(
+    int LoanId,
+    string LoanNumber,
+    long PrincipalBalanceCents,
+    long AccruedInterestCents,
+    long PerDiemCents,
+    int Days,
+    long TotalPayoffCents,
+    DateOnly PayoffDate,
+    DateOnly PaidThroughDate);
+
+// Dashboard
+
+public sealed record PastDueLoan(int LoanId, string LoanNumber, int BorrowerId, string BorrowerName, long CurrentBalanceCents, DateOnly? OldestMissedDueDate);
+
+public sealed record DashboardSummary(
+    IReadOnlyDictionary<LoanStatus, int> LoansByStatus,
+    IReadOnlyDictionary<ApplicationStatus, int> ApplicationsByStatus,
+    long TotalOutstandingCents,
+    IReadOnlyList<PastDueLoan> PastDueLoans);
+
 // Applications
 
 public sealed record ApplicationSearch(

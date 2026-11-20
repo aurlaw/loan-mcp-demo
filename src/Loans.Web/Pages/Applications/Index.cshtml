@@ -1,0 +1,51 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Applications";
+}
+
+<h1 class="h3 mb-3">Applications</h1>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input type="search" name="q" value="@Model.Query" class="form-control" placeholder="Borrower name or purpose" aria-label="Search" />
+    </div>
+    <div class="col-md-4">
+        <select name="status" class="form-select" aria-label="Status">
+            <option value="">All statuses</option>
+            @foreach (var s in Enum.GetValues<ApplicationStatus>())
+            {
+                <option value="@s" selected="@(Model.Status == s)">@Formatting.Humanize(s)</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1">Search</button>
+        <a asp-page="/Applications/Index" class="btn btn-outline-secondary">Clear</a>
+    </div>
+</form>
+
+<table class="table table-hover table-sm align-middle">
+    <thead>
+        <tr><th>Borrower</th><th>Purpose</th><th>Product</th><th class="num">Requested</th><th>Submitted</th><th>Status</th><th>Recommendation</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var a in Model.Results.Items)
+    {
+        <tr>
+            <td><a asp-page="/Applications/Details" asp-route-id="@a.Id">@a.BorrowerName</a></td>
+            <td>@a.Purpose</td>
+            <td>@Formatting.Humanize(a.Product)</td>
+            <td class="num">@Formatting.Money(a.RequestedAmountCents)</td>
+            <td>@Formatting.Date(a.SubmittedOn)</td>
+            <td><partial name="_StatusBadge" model="a.Status" /></td>
+            <td>
+                @if (a.Recommendation is { } rec) { <partial name="_StatusBadge" model="rec" /> }
+                else { <span class="text-body-secondary">—</span> }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<partial name="_Pager" model="Model.Pager" />
