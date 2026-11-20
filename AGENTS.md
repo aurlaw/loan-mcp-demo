@@ -4,6 +4,7 @@
 - Build: `dotnet build`
 - Test: `dotnet test`
 - Run: `dotnet run --project src/Loans.Web` (http://localhost:5080)
+- Migration: `dotnet ef migrations add <Name> --project src/Loans.Core --startup-project src/Loans.Web`
 
 ## Projects
 - `Loans.Core` — domain, engine, data. `Loans.Mcp` — MCP tools/prompts. `Loans.Web` — host. `tests/` — xUnit v3.

@@ -1,3 +1,4 @@
+using Loans.Core.Data;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -29,12 +30,19 @@ try
         }
     });
 
+    builder.Services.AddLoansCore(builder.Configuration, builder.Environment.ContentRootPath);
     builder.Services.AddRazorPages();
     builder.Services.AddHealthChecks();
 
     var app = builder.Build();
 
-    if (!app.Environment.IsDevelopment())
+    if (app.Environment.IsDevelopment())
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var initializer = scope.ServiceProvider.GetRequiredService<LoansDatabaseInitializer>();
+        await initializer.InitializeAsync(app.Configuration.GetValue<bool>("Database:ResetOnStartup"));
+    }
+    else
     {
         app.UseExceptionHandler("/Error");
     }
@@ -50,13 +58,15 @@ try
     app.MapRazorPages()
        .WithStaticAssets();
 
-    app.Run();
+    await app.RunAsync();
+    return 0;
 }
 catch (Exception ex) when (ex is not HostAbortedException)
 {
     Log.Fatal(ex, "Application terminated unexpectedly");
+    return 1;
 }
 finally
 {
-    Log.CloseAndFlush();
+    await Log.CloseAndFlushAsync();
 }
