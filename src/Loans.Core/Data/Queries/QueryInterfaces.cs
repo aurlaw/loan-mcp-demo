@@ -41,4 +41,16 @@ public interface IBorrowerQueries
 public interface IDashboardQueries
 {
     Task<DashboardSummary> GetSummaryAsync(int? borrowerScope, CancellationToken cancellationToken = default);
+
+    /// <summary>Applications assigned to a loan officer: zero-filled status counts and the list, newest first.</summary>
+    Task<OfficerPipeline> GetOfficerPipelineAsync(string officerUserId, CancellationToken cancellationToken = default);
+
+    /// <summary>Awaiting decision (oldest first), not yet underwritten (oldest first), and the 5 most recent decisions.</summary>
+    Task<UnderwritingQueue> GetUnderwritingQueueAsync(CancellationToken cancellationToken = default);
+}
+
+public interface IUserQueries
+{
+    /// <summary>All users with roles, linked borrower and lockout state.</summary>
+    Task<IReadOnlyList<UserSummary>> ListAsync(CancellationToken cancellationToken = default);
 }

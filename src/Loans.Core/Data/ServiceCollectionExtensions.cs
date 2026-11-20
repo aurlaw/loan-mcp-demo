@@ -59,6 +59,7 @@ public static class LoansCoreServiceCollectionExtensions
         services.AddScoped<IApplicationQueries, ApplicationQueries>();
         services.AddScoped<IBorrowerQueries, BorrowerQueries>();
         services.AddScoped<IDashboardQueries, DashboardQueries>();
+        services.AddScoped<IUserQueries, UserQueries>();
 
         return services;
     }

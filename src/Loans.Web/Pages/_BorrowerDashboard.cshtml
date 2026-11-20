@@ -1,0 +1,68 @@
+@model IndexModel
+@{
+    var s = Model.Summary;
+}
+@if (Model.Scope.HasNoBorrowerProfile)
+{
+    <h1 class="h3 mb-3">Dashboard</h1>
+    <div class="alert alert-info">No borrower profile linked to your account. Contact your loan officer.</div>
+    return;
+}
+
+<h1 class="h3 mb-1">Welcome</h1>
+<p class="text-body-secondary">@Model.Scope.BorrowerName</p>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card"><div class="card-body">
+            <div class="text-body-secondary">Outstanding balance</div>
+            <div class="stat-value">@Formatting.Money(s.TotalOutstandingCents)</div>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card"><div class="card-body">
+            <div class="text-body-secondary">Loans</div>
+            <div class="stat-value">@Model.BorrowerLoans.Count</div>
+        </div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card"><div class="card-body">
+            <div class="text-body-secondary">Applications</div>
+            <div class="stat-value">@Model.BorrowerApplications.Count</div>
+        </div></div>
+    </div>
+</div>
+
+<h2 class="h5">Your loans</h2>
+<table class="table table-sm align-middle">
+    <thead><tr><th>Loan #</th><th>Product</th><th class="num">Balance</th><th class="num">Rate</th><th>Maturity</th><th>Status</th></tr></thead>
+    <tbody>
+    @foreach (var l in Model.BorrowerLoans)
+    {
+        <tr>
+            <td><a asp-page="/Loans/Details" asp-route-id="@l.Id">@l.LoanNumber</a></td>
+            <td>@Formatting.Humanize(l.Product)</td>
+            <td class="num">@Formatting.Money(l.CurrentBalanceCents)</td>
+            <td class="num">@Formatting.Rate(l.RateBps)</td>
+            <td>@Formatting.Date(l.MaturityDate)</td>
+            <td><partial name="_StatusBadge" model="l.Status" /></td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<h2 class="h5 mt-4">Your applications</h2>
+<table class="table table-sm align-middle">
+    <thead><tr><th>Purpose</th><th class="num">Requested</th><th>Submitted</th><th>Status</th></tr></thead>
+    <tbody>
+    @foreach (var a in Model.BorrowerApplications)
+    {
+        <tr>
+            <td><a asp-page="/Applications/Details" asp-route-id="@a.Id">@a.Purpose</a></td>
+            <td class="num">@Formatting.Money(a.RequestedAmountCents)</td>
+            <td>@Formatting.Date(a.SubmittedOn)</td>
+            <td><partial name="_StatusBadge" model="a.Status" /></td>
+        </tr>
+    }
+    </tbody>
+</table>

@@ -67,6 +67,16 @@ internal static partial class WebTestHelpers
     public static IReadOnlySet<string> ApplicationLinksIn(string html) =>
         ApplicationLink().Matches(html).Select(m => m.Value).ToHashSet();
 
+    /// <summary>Inner HTML of the first &lt;tag data-testid="..."&gt; element (sections/articles are not nested with the same tag).</summary>
+    public static string? Section(string html, string testId, string tag = "section")
+    {
+        var match = Regex.Match(html, $"""<{tag}[^>]*data-testid="{Regex.Escape(testId)}"[^>]*>(.*?)</{tag}>""", RegexOptions.Singleline);
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
+    public static bool HasTestId(string html, string testId) =>
+        html.Contains($"""data-testid="{testId}""", StringComparison.Ordinal);
+
     /// <summary>Inner text of the first element with the given data-testid.</summary>
     public static string? TestIdText(string html, string testId)
     {

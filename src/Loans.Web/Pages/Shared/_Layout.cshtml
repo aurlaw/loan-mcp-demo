@@ -35,6 +35,10 @@
                             <li class="nav-item"><a class="@NavClass("/")" asp-page="/Index">Dashboard</a></li>
                             <li class="nav-item"><a class="@NavClass("/Loans")" asp-page="/Loans/Index">Loans</a></li>
                             <li class="nav-item"><a class="@NavClass("/Applications")" asp-page="/Applications/Index">Applications</a></li>
+                            @if (User.IsInRole(SeedRoles.Admin))
+                            {
+                                <li class="nav-item"><a class="@NavClass("/Admin")" asp-page="/Admin/Users">Users</a></li>
+                            }
                         </ul>
                         <div class="d-flex align-items-center gap-2 text-light">
                             <span data-testid="display-name">@displayName</span>

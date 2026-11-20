@@ -87,9 +87,10 @@ public class DataAccessTests(LoansWebFactory factory) : IClassFixture<LoansWebFa
     }
 
     [Fact]
-    public async Task Staff_DashboardShowsSeedCountsAndPastDueLoans()
+    public async Task Admin_PortfolioOverviewShowsSeedCountsAndPastDueLoans()
     {
-        var client = await factory.SignedInClientAsync(SeedUsers.Officer.Email);
+        // Phase 3.1: the full portfolio overview is the Admin dashboard (officer/underwriter lead with their own views).
+        var client = await factory.SignedInClientAsync(SeedUsers.Admin.Email);
 
         var html = await client.GetStringAsync("/");
 

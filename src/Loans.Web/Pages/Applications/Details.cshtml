@@ -18,6 +18,11 @@
 </div>
 <p class="text-body-secondary">@a.Purpose</p>
 
+<div class="alert alert-light border d-flex align-items-center gap-2 py-2" role="status">
+    <span class="fw-semibold">Next step:</span>
+    <span data-testid="next-step">@NextStepHint.For(a.Status, User.Capabilities())</span>
+</div>
+
 <div class="row g-4">
     <div class="col-lg-6">
         <div class="card h-100">

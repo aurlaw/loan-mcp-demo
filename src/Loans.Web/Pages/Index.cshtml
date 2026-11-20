@@ -1,137 +1,37 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Dashboard";
-    var s = Model.Summary;
+    ViewData["Title"] = Model.Heading;
 }
 
-@if (Model.Scope.HasNoBorrowerProfile)
+@switch (Model.View)
 {
-    <h1 class="h3 mb-3">Dashboard</h1>
-    <div class="alert alert-info">No borrower profile linked to your account. Contact your loan officer.</div>
-    return;
-}
-
-@if (Model.Scope.IsBorrower)
-{
-    <h1 class="h3 mb-1">Welcome</h1>
-    <p class="text-body-secondary">@Model.Scope.BorrowerName</p>
-
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card stat-card"><div class="card-body">
-                <div class="text-body-secondary">Outstanding balance</div>
-                <div class="stat-value">@Formatting.Money(s.TotalOutstandingCents)</div>
-            </div></div>
-        </div>
-        <div class="col-md-4">
-            <div class="card stat-card"><div class="card-body">
-                <div class="text-body-secondary">Loans</div>
-                <div class="stat-value">@Model.BorrowerLoans.Count</div>
-            </div></div>
-        </div>
-        <div class="col-md-4">
-            <div class="card stat-card"><div class="card-body">
-                <div class="text-body-secondary">Applications</div>
-                <div class="stat-value">@Model.BorrowerApplications.Count</div>
-            </div></div>
-        </div>
-    </div>
-
-    <h2 class="h5">Your loans</h2>
-    <table class="table table-sm align-middle">
-        <thead><tr><th>Loan #</th><th>Product</th><th class="num">Balance</th><th class="num">Rate</th><th>Maturity</th><th>Status</th></tr></thead>
-        <tbody>
-        @foreach (var l in Model.BorrowerLoans)
-        {
-            <tr>
-                <td><a asp-page="/Loans/Details" asp-route-id="@l.Id">@l.LoanNumber</a></td>
-                <td>@Formatting.Humanize(l.Product)</td>
-                <td class="num">@Formatting.Money(l.CurrentBalanceCents)</td>
-                <td class="num">@Formatting.Rate(l.RateBps)</td>
-                <td>@Formatting.Date(l.MaturityDate)</td>
-                <td><partial name="_StatusBadge" model="l.Status" /></td>
-            </tr>
-        }
-        </tbody>
-    </table>
-
-    <h2 class="h5 mt-4">Your applications</h2>
-    <table class="table table-sm align-middle">
-        <thead><tr><th>Purpose</th><th class="num">Requested</th><th>Submitted</th><th>Status</th></tr></thead>
-        <tbody>
-        @foreach (var a in Model.BorrowerApplications)
-        {
-            <tr>
-                <td><a asp-page="/Applications/Details" asp-route-id="@a.Id">@a.Purpose</a></td>
-                <td class="num">@Formatting.Money(a.RequestedAmountCents)</td>
-                <td>@Formatting.Date(a.SubmittedOn)</td>
-                <td><partial name="_StatusBadge" model="a.Status" /></td>
-            </tr>
-        }
-        </tbody>
-    </table>
-    return;
-}
-
-<h1 class="h3 mb-3">Dashboard</h1>
-
-<div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card stat-card h-100"><div class="card-body">
-            <div class="text-body-secondary">Total outstanding</div>
-            <div class="stat-value" data-testid="total-outstanding">@Formatting.Money(s.TotalOutstandingCents)</div>
-        </div></div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100"><div class="card-body">
-            <div class="text-body-secondary mb-2">Loans by status</div>
-            <ul class="list-unstyled mb-0">
-                @foreach (var (status, count) in s.LoansByStatus)
-                {
-                    <li class="d-flex justify-content-between mb-1">
-                        <a asp-page="/Loans/Index" asp-route-status="@status"><partial name="_StatusBadge" model="status" /></a>
-                        <span class="fw-semibold" data-testid="loans-@status">@count</span>
-                    </li>
-                }
-            </ul>
-        </div></div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100"><div class="card-body">
-            <div class="text-body-secondary mb-2">Applications by status</div>
-            <ul class="list-unstyled mb-0">
-                @foreach (var (status, count) in s.ApplicationsByStatus)
-                {
-                    <li class="d-flex justify-content-between mb-1">
-                        <a asp-page="/Applications/Index" asp-route-status="@status"><partial name="_StatusBadge" model="status" /></a>
-                        <span class="fw-semibold" data-testid="applications-@status">@count</span>
-                    </li>
-                }
-            </ul>
-        </div></div>
-    </div>
-</div>
-
-<h2 class="h5">Past-due loans</h2>
-@if (s.PastDueLoans.Count == 0)
-{
-    <p class="text-body-secondary">No past-due loans.</p>
-}
-else
-{
-    <table class="table table-sm align-middle" data-testid="past-due">
-        <thead><tr><th>Loan #</th><th>Borrower</th><th class="num">Balance</th><th>Oldest missed payment</th></tr></thead>
-        <tbody>
-        @foreach (var p in s.PastDueLoans)
-        {
-            <tr>
-                <td><a asp-page="/Loans/Details" asp-route-id="@p.LoanId">@p.LoanNumber</a></td>
-                <td>@p.BorrowerName</td>
-                <td class="num">@Formatting.Money(p.CurrentBalanceCents)</td>
-                <td>@Formatting.Date(p.OldestMissedDueDate)</td>
-            </tr>
-        }
-        </tbody>
-    </table>
+    case DashboardView.Borrower:
+        <partial name="_BorrowerDashboard" model="Model" />
+        break;
+    case DashboardView.OfficerPipeline:
+        <h1 class="h3 mb-3">@Model.Heading</h1>
+        <partial name="_OfficerPipeline" model="Model.Pipeline" />
+        <partial name="_PortfolioSnapshot" model="Model.Summary" />
+        break;
+    case DashboardView.UnderwritingQueue:
+        <h1 class="h3 mb-3">@Model.Heading</h1>
+        <partial name="_UnderwritingQueue" model="Model.Queue" />
+        <partial name="_PortfolioSnapshot" model="Model.Summary" />
+        break;
+    default:
+        <h1 class="h3 mb-3">@Model.Heading</h1>
+        <partial name="_PortfolioOverview" model="Model.Summary" />
+        <section class="mt-4" data-testid="users-link">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="h5 mb-1">Users &amp; roles</h2>
+                        <p class="text-body-secondary mb-0">See who has access and what each role can do through Claude.</p>
+                    </div>
+                    <a asp-page="/Admin/Users" class="btn btn-outline-primary">View users</a>
+                </div>
+            </div>
+        </section>
+        break;
 }

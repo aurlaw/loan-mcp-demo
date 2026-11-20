@@ -1,0 +1,62 @@
+@model DashboardSummary
+<section data-testid="portfolio-overview">
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card h-100"><div class="card-body">
+                <div class="text-body-secondary">Total outstanding</div>
+                <div class="stat-value" data-testid="total-outstanding">@Formatting.Money(Model.TotalOutstandingCents)</div>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100"><div class="card-body">
+                <div class="text-body-secondary mb-2">Loans by status</div>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var (status, count) in Model.LoansByStatus)
+                    {
+                        <li class="d-flex justify-content-between mb-1">
+                            <a asp-page="/Loans/Index" asp-route-status="@status"><partial name="_StatusBadge" model="status" /></a>
+                            <span class="fw-semibold" data-testid="loans-@status">@count</span>
+                        </li>
+                    }
+                </ul>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100"><div class="card-body">
+                <div class="text-body-secondary mb-2">Applications by status</div>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var (status, count) in Model.ApplicationsByStatus)
+                    {
+                        <li class="d-flex justify-content-between mb-1">
+                            <a asp-page="/Applications/Index" asp-route-status="@status"><partial name="_StatusBadge" model="status" /></a>
+                            <span class="fw-semibold" data-testid="applications-@status">@count</span>
+                        </li>
+                    }
+                </ul>
+            </div></div>
+        </div>
+    </div>
+
+    <h2 class="h5">Past-due loans</h2>
+    @if (Model.PastDueLoans.Count == 0)
+    {
+        <p class="text-body-secondary">No past-due loans.</p>
+    }
+    else
+    {
+        <table class="table table-sm align-middle" data-testid="past-due">
+            <thead><tr><th>Loan #</th><th>Borrower</th><th class="num">Balance</th><th>Oldest missed payment</th></tr></thead>
+            <tbody>
+            @foreach (var p in Model.PastDueLoans)
+            {
+                <tr>
+                    <td><a asp-page="/Loans/Details" asp-route-id="@p.LoanId">@p.LoanNumber</a></td>
+                    <td>@p.BorrowerName</td>
+                    <td class="num">@Formatting.Money(p.CurrentBalanceCents)</td>
+                    <td>@Formatting.Date(p.OldestMissedDueDate)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>

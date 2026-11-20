@@ -1,4 +1,5 @@
 using Loans.Core.Data;
+using Loans.Core.Data.Seeding;
 using Loans.Web.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -63,6 +64,10 @@ try
         options.FallbackPolicy = new AuthorizationPolicyBuilder()
             .RequireAuthenticatedUser()
             .Build();
+
+        options.AddPolicy(AuthorizationPolicies.AdminOnly, policy => policy
+            .RequireAuthenticatedUser()
+            .RequireRole(SeedRoles.Admin));
     });
 
     builder.Services.AddHttpContextAccessor();

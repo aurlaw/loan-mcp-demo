@@ -91,6 +91,50 @@ public sealed record DashboardSummary(
     long TotalOutstandingCents,
     IReadOnlyList<PastDueLoan> PastDueLoans);
 
+public sealed record OfficerPipeline(
+    IReadOnlyDictionary<ApplicationStatus, int> CountsByStatus,
+    IReadOnlyList<ApplicationSummary> Applications);
+
+public sealed record AwaitingDecisionItem(
+    int ApplicationId,
+    string BorrowerName,
+    long RequestedAmountCents,
+    int DscrX100,
+    int? LtvBps,
+    int RiskRating,
+    Recommendation Recommendation,
+    DateTimeOffset RunAt);
+
+public sealed record NotYetUnderwrittenItem(
+    int ApplicationId,
+    string BorrowerName,
+    long RequestedAmountCents,
+    LoanProduct Product,
+    DateOnly SubmittedOn);
+
+public sealed record RecentDecisionItem(
+    int ApplicationId,
+    string BorrowerName,
+    DecisionOutcome Outcome,
+    int? ApprovedRateBps,
+    string? DecidedByName,
+    DateTimeOffset DecidedAt);
+
+public sealed record UnderwritingQueue(
+    IReadOnlyList<AwaitingDecisionItem> AwaitingDecision,
+    IReadOnlyList<NotYetUnderwrittenItem> NotYetUnderwritten,
+    IReadOnlyList<RecentDecisionItem> RecentlyDecided);
+
+// Users
+
+public sealed record UserSummary(
+    string Id,
+    string DisplayName,
+    string Email,
+    IReadOnlyList<string> Roles,
+    string? LinkedBorrowerName,
+    bool IsLockedOut);
+
 // Applications
 
 public sealed record ApplicationSearch(

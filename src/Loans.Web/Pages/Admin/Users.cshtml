@@ -1,0 +1,49 @@
+@page
+@model UsersModel
+@{
+    ViewData["Title"] = "Users & roles";
+}
+
+<h1 class="h3 mb-1">Users &amp; roles</h1>
+<p class="text-body-secondary">Access is assigned by role. Capabilities determine what each user can do when connected through Claude.</p>
+
+<table class="table align-middle" data-testid="users">
+    <thead>
+        <tr><th>Name</th><th>Email</th><th>Role</th><th>Linked borrower</th><th>Claude (MCP) access</th><th>Capabilities</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var u in Model.Users)
+    {
+        var capabilities = RoleCapabilities.Labels(RoleCapabilities.For(u.Roles));
+        var mcp = RoleCapabilities.HasMcpAccess(u.Roles);
+        <tr data-testid="user-@u.Email">
+            <td class="fw-semibold">@u.DisplayName</td>
+            <td>@u.Email</td>
+            <td>
+                @foreach (var role in u.Roles)
+                {
+                    <span class="badge text-bg-primary me-1" data-testid="user-role">@Formatting.Humanize(role)</span>
+                }
+            </td>
+            <td>@(u.LinkedBorrowerName ?? "—")</td>
+            <td data-testid="user-mcp">
+                @if (mcp) { <span class="badge text-bg-success">Yes</span> }
+                else { <span class="badge text-bg-secondary">No</span> }
+            </td>
+            <td data-testid="user-capabilities">
+                @if (capabilities.Count == 0) { <span class="text-body-secondary">None</span> }
+                else
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var label in capabilities) { <li>@label</li> }
+                    </ul>
+                }
+            </td>
+            <td>
+                @if (u.IsLockedOut) { <span class="badge text-bg-danger">Locked out</span> }
+                else { <span class="badge text-bg-success">Active</span> }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

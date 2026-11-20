@@ -1,0 +1,24 @@
+@model DashboardSummary
+<section class="mt-4" data-testid="portfolio-snapshot">
+    <h2 class="h6 text-uppercase text-body-secondary mb-2">Portfolio snapshot</h2>
+    <div class="card">
+        <div class="card-body d-flex flex-wrap gap-4 align-items-center">
+            <div>
+                <div class="small text-body-secondary">Total outstanding</div>
+                <div class="fw-semibold">@Formatting.Money(Model.TotalOutstandingCents)</div>
+            </div>
+            @foreach (var (status, count) in Model.LoansByStatus)
+            {
+                <div>
+                    <div class="small"><partial name="_StatusBadge" model="status" /></div>
+                    <div class="fw-semibold" data-testid="snapshot-loans-@status">@count</div>
+                </div>
+            }
+            <div class="ms-auto">
+                <a asp-page="/Loans/Index" asp-route-status="@LoanStatus.PastDue" data-testid="snapshot-past-due">
+                    @Model.PastDueLoans.Count past-due @(Model.PastDueLoans.Count == 1 ? "loan" : "loans") →
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

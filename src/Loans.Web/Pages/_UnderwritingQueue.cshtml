@@ -1,0 +1,88 @@
+@model UnderwritingQueue
+<section data-testid="underwriting-queue">
+    <article class="card border-warning mb-4" data-testid="awaiting-decision">
+        <div class="card-header bg-warning-subtle fw-semibold">Awaiting decision (@Model.AwaitingDecision.Count)</div>
+        <div class="card-body p-0">
+            @if (Model.AwaitingDecision.Count == 0)
+            {
+                <p class="text-body-secondary p-3 mb-0">Nothing awaiting a decision.</p>
+            }
+            else
+            {
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Borrower</th><th class="num">Requested</th><th class="num">DSCR</th><th class="num">LTV</th><th class="num">Risk</th><th>Recommendation</th><th>Underwritten</th></tr></thead>
+                    <tbody>
+                    @foreach (var i in Model.AwaitingDecision)
+                    {
+                        <tr>
+                            <td><a asp-page="/Applications/Details" asp-route-id="@i.ApplicationId">@i.BorrowerName</a></td>
+                            <td class="num">@Formatting.Money(i.RequestedAmountCents)</td>
+                            <td class="num">@Formatting.Dscr(i.DscrX100)</td>
+                            <td class="num">@Formatting.Ltv(i.LtvBps)</td>
+                            <td class="num">@i.RiskRating</td>
+                            <td><partial name="_StatusBadge" model="i.Recommendation" /></td>
+                            <td>@Formatting.DateTime(i.RunAt)</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </article>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <article data-testid="not-yet-underwritten">
+                <h2 class="h5">Not yet underwritten</h2>
+                @if (Model.NotYetUnderwritten.Count == 0)
+                {
+                    <p class="text-body-secondary">None.</p>
+                }
+                else
+                {
+                    <table class="table table-sm align-middle">
+                        <thead><tr><th>Borrower</th><th class="num">Requested</th><th>Product</th><th>Submitted</th></tr></thead>
+                        <tbody>
+                        @foreach (var i in Model.NotYetUnderwritten)
+                        {
+                            <tr>
+                                <td><a asp-page="/Applications/Details" asp-route-id="@i.ApplicationId">@i.BorrowerName</a></td>
+                                <td class="num">@Formatting.Money(i.RequestedAmountCents)</td>
+                                <td>@Formatting.Humanize(i.Product)</td>
+                                <td>@Formatting.Date(i.SubmittedOn)</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </article>
+        </div>
+        <div class="col-lg-6">
+            <article data-testid="recently-decided">
+                <h2 class="h5">Recently decided</h2>
+                @if (Model.RecentlyDecided.Count == 0)
+                {
+                    <p class="text-body-secondary">No decisions yet.</p>
+                }
+                else
+                {
+                    <table class="table table-sm align-middle">
+                        <thead><tr><th>Borrower</th><th>Outcome</th><th class="num">Rate</th><th>Decided by</th><th>When</th></tr></thead>
+                        <tbody>
+                        @foreach (var i in Model.RecentlyDecided)
+                        {
+                            <tr>
+                                <td><a asp-page="/Applications/Details" asp-route-id="@i.ApplicationId">@i.BorrowerName</a></td>
+                                <td><partial name="_StatusBadge" model="i.Outcome" /></td>
+                                <td class="num">@Formatting.Rate(i.ApprovedRateBps)</td>
+                                <td>@(i.DecidedByName ?? "—")</td>
+                                <td>@Formatting.DateTime(i.DecidedAt)</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            </article>
+        </div>
+    </div>
+</section>
