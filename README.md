@@ -1,7 +1,7 @@
 # Loans MCP Demo
 
 Proof-of-concept commercial-loans web app (ASP.NET Core Razor Pages, .NET 10) that will expose an
-OAuth-protected MCP endpoint for Claude.
+OAuth-protected MCP endpoint for Claude/ChatGPT.
 
 ## First-time setup
 
