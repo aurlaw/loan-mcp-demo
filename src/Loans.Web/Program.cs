@@ -1,6 +1,7 @@
 using Loans.Core.Data;
 using Loans.Core.Data.Seeding;
 using Loans.Web.Infrastructure;
+using Loans.Web.OAuth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Serilog;
@@ -70,6 +71,8 @@ try
             .RequireRole(SeedRoles.Admin));
     });
 
+    builder.Services.AddLoansOAuth(builder.Configuration, builder.Environment);
+
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ICurrentUserScope, CurrentUserScope>();
 
@@ -78,13 +81,20 @@ try
 
     var app = builder.Build();
 
-    if (app.Environment.IsDevelopment())
+    app.UseForwardedHeaders();
+
+    await using (var scope = app.Services.CreateAsyncScope())
     {
-        await using var scope = app.Services.CreateAsyncScope();
-        var initializer = scope.ServiceProvider.GetRequiredService<LoansDatabaseInitializer>();
-        await initializer.InitializeAsync(app.Configuration.GetValue<bool>("Database:ResetOnStartup"));
+        if (app.Environment.IsDevelopment())
+        {
+            var initializer = scope.ServiceProvider.GetRequiredService<LoansDatabaseInitializer>();
+            await initializer.InitializeAsync(app.Configuration.GetValue<bool>("Database:ResetOnStartup"));
+        }
+
+        await scope.ServiceProvider.GetRequiredService<OAuthClientSeeder>().SeedAsync();
     }
-    else
+
+    if (!app.Environment.IsDevelopment())
     {
         app.UseExceptionHandler("/Error");
     }
@@ -98,6 +108,7 @@ try
 
     app.MapStaticAssets().AllowAnonymous();
     app.MapHealthChecks("/health").AllowAnonymous();
+    app.MapLoansTokenEndpoint();
     app.MapRazorPages()
        .WithStaticAssets();
 

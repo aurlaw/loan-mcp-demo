@@ -5,11 +5,11 @@
 }
 
 <h1 class="h3 mb-1">Users &amp; roles</h1>
-<p class="text-body-secondary">Access is assigned by role. Capabilities determine what each user can do when connected through Claude.</p>
+<p class="text-body-secondary">Access is assigned by role. Capabilities determine what each user can do when connected through an AI assistant.</p>
 
 <table class="table align-middle" data-testid="users">
     <thead>
-        <tr><th>Name</th><th>Email</th><th>Role</th><th>Linked borrower</th><th>Claude (MCP) access</th><th>Capabilities</th><th>Status</th></tr>
+        <tr><th>Name</th><th>Email</th><th>Role</th><th>Linked borrower</th><th>AI assistant (MCP) access</th><th>Capabilities</th><th>Status</th></tr>
     </thead>
     <tbody>
     @foreach (var u in Model.Users)

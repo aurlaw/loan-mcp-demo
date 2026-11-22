@@ -486,3 +486,8 @@ $RECYCLE.BIN/
 *.db-shm
 *.db-wal
 .DS_Store
+
+# OAuth signing/encryption and data protection keys
+**/App_Data/keys/
+**/App_Data/dataprotection/
+localnotes.sh

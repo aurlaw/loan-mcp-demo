@@ -1,0 +1,46 @@
+@page "/connect/authorize"
+@model AuthorizeModel
+@{
+    ViewData["Title"] = "Authorize access";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm" data-testid="consent">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-1"><span data-testid="consent-client">@Model.ClientName</span> wants to connect</h1>
+                @if (Model.ClientHost is not null)
+                {
+                    <p class="text-body-secondary mb-3">from <strong data-testid="consent-host">@Model.ClientHost</strong></p>
+                }
+
+                <p class="mb-3">
+                    Signed in as <strong data-testid="consent-user">@Model.UserDisplayName</strong>
+                    @foreach (var role in Model.RoleLabels)
+                    {
+                        <span class="badge text-bg-primary ms-1">@role</span>
+                    }
+                </p>
+
+                <p class="fw-semibold mb-2">It will be able to:</p>
+                <ul data-testid="consent-capabilities">
+                    @foreach (var label in Model.CapabilityLabels)
+                    {
+                        <li>@label</li>
+                    }
+                </ul>
+
+                <p class="small text-body-secondary">Only allow apps you trust. This access continues until it's revoked or your role changes.</p>
+
+                <form method="post" asp-page="/Connect/Authorize" class="d-flex gap-2">
+                    @foreach (var parameter in Model.OAuthParameters)
+                    {
+                        <input type="hidden" name="@parameter.Key" value="@parameter.Value" />
+                    }
+                    <button type="submit" name="consent" value="allow" class="btn btn-primary flex-grow-1">Allow</button>
+                    <button type="submit" name="consent" value="deny" class="btn btn-outline-secondary flex-grow-1">Deny</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

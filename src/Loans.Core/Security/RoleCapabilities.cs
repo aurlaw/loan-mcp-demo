@@ -18,6 +18,18 @@ public static class CapabilityScopes
     public const string UnderwritingRun = "underwriting.run";
     public const string DecisionsWrite = "decisions.write";
 
+    /// <summary>All capability scopes.</summary>
+    public static readonly IReadOnlyList<string> All = [LoansRead, UnderwritingRun, DecisionsWrite];
+
+    /// <summary>The capability for a scope string, or null when it isn't a capability scope.</summary>
+    public static Capability? ToCapability(string scope) => scope switch
+    {
+        LoansRead => Capability.LoansRead,
+        UnderwritingRun => Capability.UnderwritingRun,
+        DecisionsWrite => Capability.DecisionsWrite,
+        _ => null,
+    };
+
     public static string For(Capability capability) => capability switch
     {
         Capability.LoansRead => LoansRead,

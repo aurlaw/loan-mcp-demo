@@ -117,7 +117,7 @@ public class RoleExperienceTests(LoansWebFactory factory) : IClassFixture<LoansW
         var html = await response.Content.ReadAsStringAsync();
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("Access is assigned by role. Capabilities determine what each user can do when connected through Claude.", html);
+        Assert.Contains("Access is assigned by role. Capabilities determine what each user can do when connected through an AI assistant.", html);
 
         var expected = new (string Email, string Role, string Mcp, string[] Capabilities)[]
         {

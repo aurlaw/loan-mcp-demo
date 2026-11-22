@@ -43,7 +43,14 @@ public static class LoansCoreServiceCollectionExtensions
         string? seedDefaultPassword,
         Action<IdentityBuilder>? configureIdentity = null)
     {
-        services.AddDbContext<LoansDbContext>(options => options.UseSqlite(connectionString));
+        services.AddDbContext<LoansDbContext>(options =>
+        {
+            options.UseSqlite(connectionString);
+            options.UseOpenIddict();
+        });
+
+        services.AddOpenIddict()
+            .AddCore(options => options.UseEntityFrameworkCore().UseDbContext<LoansDbContext>());
 
         var identity = services.AddIdentityCore<ApplicationUser>()
             .AddRoles<IdentityRole>()
